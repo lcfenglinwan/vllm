@@ -294,6 +294,16 @@ def __setattr__(name: str, value):
         raise AttributeError(f"No attribute named '{name}' exists in {__name__}.")
 
 
+def is_current_platform_resolved() -> bool:
+    """Whether ``current_platform`` has already been resolved.
+
+    Registries that may run while the platform is still resolving (e.g. OOT
+    backends registering from their platform ``__init__``) use this to avoid
+    re-entering resolution when accessing ``current_platform``.
+    """
+    return _current_platform is not None
+
+
 __all__ = [
     "Platform",
     "PlatformEnum",
@@ -301,4 +311,5 @@ __all__ = [
     "CpuArchEnum",
     "_init_trace",
     "_is_amd_zen_cpu",
+    "is_current_platform_resolved",
 ]

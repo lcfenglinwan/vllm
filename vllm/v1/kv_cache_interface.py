@@ -43,6 +43,7 @@ class KVQuantMode(IntEnum):
     FP8_PER_TOKEN_HEAD = 3  # per-token-head dynamic scales for fp8
     INT4_PER_TOKEN_HEAD = 4  # packed 2×int4/byte, RHT + asymmetric zp
     NVFP4 = 5  # packed fp4 data + fp8 block scales
+    BACKEND = 99  # backend self-manages all kernel dispatch (OOT dtypes)
 
     @property
     def is_per_token_head(self) -> bool:
@@ -61,6 +62,11 @@ class KVQuantMode(IntEnum):
 
 def get_kv_quant_mode(kv_cache_dtype: str) -> KVQuantMode:
     """Map a ``kv_cache_dtype`` string to a :class:`KVQuantMode`."""
+    from vllm.config.kv_cache_dtype import get_kv_cache_dtype_handler
+
+    handler = get_kv_cache_dtype_handler(kv_cache_dtype)
+    if handler is not None:
+        return handler.quant_mode()
     if kv_cache_dtype == "int4_per_token_head":
         return KVQuantMode.INT4_PER_TOKEN_HEAD
     if kv_cache_dtype == "int8_per_token_head":
@@ -72,15 +78,6 @@ def get_kv_quant_mode(kv_cache_dtype: str) -> KVQuantMode:
     if isinstance(kv_cache_dtype, str) and kv_cache_dtype.startswith("fp8"):
         return KVQuantMode.FP8_PER_TENSOR
     return KVQuantMode.NONE
-
-
-def is_quantized_kv_cache(kv_cache_dtype: str) -> bool:
-    return get_kv_quant_mode(kv_cache_dtype) != KVQuantMode.NONE
-
-
-def kv_cache_uses_per_token_head_scales(kv_cache_dtype: str) -> bool:
-    """Return True if *kv_cache_dtype* needs per-token-head scales."""
-    return get_kv_quant_mode(kv_cache_dtype).is_per_token_head
 
 
 class KVCacheSpecKind(str, Enum):
