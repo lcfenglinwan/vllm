@@ -68,9 +68,11 @@ class AttentionConfig:
     use_fp4_indexer_cache: bool = False
     """If set, use fp4 indexer cache for dsv32 family model (not support yet)"""
 
-    indexer_kv_dtype: IndexerKVDType = "bf16"
-    """Data type for the sparse-attention indexer K cache. Quantized formats
-    (fp8, mxfp4, nvfp4) require indexer kernel support in the backend."""
+    indexer_kv_dtype: IndexerKVDType | str = "auto"
+    """Data type for the sparse-attention indexer K cache. "auto" picks the
+    model's default (bf16 for MiniMax M3, fp8 for the DeepSeek sparse
+    indexer). Quantized formats (fp8, mxfp4, nvfp4) require indexer kernel
+    support in the backend."""
 
     use_non_causal: bool = False
     """Whether to use non-causal (bidirectional) attention."""
